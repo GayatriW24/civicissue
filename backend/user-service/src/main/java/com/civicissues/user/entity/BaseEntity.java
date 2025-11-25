@@ -8,20 +8,11 @@ import org.hibernate.annotations.UpdateTimestamp;
 import jakarta.persistence.MappedSuperclass;
 
 @MappedSuperclass
-<<<<<<< HEAD
+public class BaseEntity {
 
-public class BaseEntity {
-	@CreationTimestamp
-	private LocalDate createdOn;
-	@UpdateTimestamp
-	private LocalDate updatedOn;
-=======
-public class BaseEntity {
-	
-	 @CreationTimestamp
-     private LocalDate createdOn;
-	 @UpdateTimestamp
-     private LocalDate updatedOn;
-     
->>>>>>> feature/user-service
+    @CreationTimestamp
+    private LocalDate createdOn;
+
+    @UpdateTimestamp
+    private LocalDate updatedOn;
 }
