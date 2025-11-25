@@ -1,0 +1,59 @@
+package com.civicissues.user.security;
+
+import java.io.IOException;
+import java.util.List;
+
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import com.civicissues.user.dto.JwtDTO;
+
+import io.jsonwebtoken.Claims;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Component
+@AllArgsConstructor
+@Slf4j
+public class CustomJwtFilter extends OncePerRequestFilter {
+	
+	private final JwtUtils jwtUtils;
+
+	@Override
+	protected void doFilterInternal(HttpServletRequest request, 
+			HttpServletResponse response, FilterChain filterChain)
+			throws ServletException, IOException {
+		
+		String authHeaderValue=request.getHeader("Authorization");
+		if(authHeaderValue != null && authHeaderValue.startsWith("Bearer "))
+		{
+			
+			String jwt=authHeaderValue.substring(7);
+			
+			Claims claims = jwtUtils.validateToken(jwt);
+			
+			Long userId=claims.get("userId", Long.class);
+			String role=claims.get("role",String.class);
+			String email=claims.getSubject();
+			JwtDTO dto=new JwtDTO(userId, email, role);
+			
+			UsernamePasswordAuthenticationToken token=
+					new UsernamePasswordAuthenticationToken(dto, 
+							null, List.of(new SimpleGrantedAuthority(role)));
+		
+			SecurityContextHolder.getContext().setAuthentication(token);
+		
+		}
+		
+		filterChain.doFilter(request, response);
+
+	}
+
+}
