@@ -106,3 +106,32 @@ notifications stored for reporting (who received what, when, for which complaint
 add if missing anything.....
 
 3. paid service workflow ....
+citizen/admin performs an action that triggers a billing/service event (new paid request, payment initiated, payment succeeded/failed, invoice created, subscription renewal, refund, assignment, status update, feedback)
+backend detects the event (INSERT/UPDATE in COMPLAINT (used as service request), PAYMENT, INVOICE or SUBSCRIPTION table)
+backend creates or updates the billing records (PAYMENT, INVOICE, SUBSCRIPTION) and a NOTIFICATION entry (notification_id, user_id, title, message, type, related_id, read_status = false, created_at)
+backend decides the receiver based on event:
+– new paid request created (status = PAYMENT_PENDING) → send payment link notification to CITIZEN (and ADMIN if auto-assign)
+– payment initiated → send payment.started to CITIZEN
+– payment succeeded → update PAYMENT.status = succeeded, INVOICE.status = paid, SUBSCRIPTION.status = active → send payment.succeeded to CITIZEN and assigned ADMIN (receipt to citizen; new-request alert to admin)
+– payment failed → update PAYMENT.status = failed, INVOICE.status = unpaid, SUBSCRIPTION.status = past_due → send payment.failed to CITIZEN (+ ADMIN if manual review) with retry instructions
+– invoice created (recurring or manual) → send invoice.created to CITIZEN and optional ADMIN billing queue
+– subscription renewal failed → send subscription.past_due to CITIZEN and ADMIN (if auto-blocking entitlements)
+– refund processed → send refund.processed to CITIZEN and ADMIN
+– service request assigned to admin → send request.assigned to assigned ADMIN
+– complaint/service status changed by admin → create RESPONSE entry + send status.updated to CITIZEN
+– feedback submitted for a paid request → send feedback.received to ADMIN
+
+backend pushes notification via real-time channel to frontend (WebSocket / Socket.IO / Pusher)
+backend also sends fallback email/SMS (receipt, reminders, critical failures)
+frontend (citizen/admin) receives notification event → updates billing/notifications badge count and shows toast/actionable link
+frontend sends GET /api/notifications (or GET /api/invoices / GET /api/subscriptions) to load full lists; backend returns list filtered by user_id (and optionally by type, status, related_id)
+user opens notification / invoice / subscription panel → performs action (view invoice, download receipt, retry payment, update card, upload docs)
+frontend sends PATCH/POST to endpoints to act:
+
+PATCH /api/notifications/{id}/read → backend updates NOTIFICATION.read_status = true
+
+POST /api/payments/{invoice_id}/retry → backend triggers retry/creates new PAYMENT and returns payment link/session
+
+POST /api/attachments (for extra docs) → backend creates ATTACHMENT rows linked to complaint_id (service request) and notifies assigned ADMIN
+
+PATCH /api/complaints/{id}/status (admin) → backend updates COMPLAINT, creates RESPONSE log, notifies CITIZEN
