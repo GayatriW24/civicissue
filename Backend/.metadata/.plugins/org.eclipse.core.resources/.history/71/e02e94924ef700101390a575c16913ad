@@ -1,0 +1,55 @@
+package com.civicissues.service.impl;
+
+import com.civicissues.dto.DepartmentDTO;
+import com.civicissues.entity.Department;
+import com.civicissues.repository.DepartmentRepository;
+import com.civicissues.service.DepartmentService;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+public class DepartmentServiceImpl implements DepartmentService {
+
+    private final DepartmentRepository departmentRepository;
+
+    public DepartmentServiceImpl(DepartmentRepository departmentRepository) {
+        this.departmentRepository = departmentRepository;
+    }
+
+    @Override
+    public DepartmentDto createDepartment(DepartmentDto dto) {
+        Department department = new Department();
+        department.setName(dto.getName());
+        department.setDescription(dto.getDescription());
+
+        Department saved = departmentRepository.save(department);
+        dto.setId(saved.getId());
+        return dto;
+    }
+
+    @Override
+    public List<DepartmentDto> getAllDepartments() {
+        return departmentRepository.findAll()
+                .stream()
+                .map(d -> {
+                    DepartmentDto dto = new DepartmentDto();
+                    dto.setId(d.getId());
+                    dto.setName(d.getName());
+                    dto.setDescription(d.getDescription());
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public DepartmentDto getDepartmentById(Long id) {
+        Department d = departmentRepository.findById(id).orElseThrow();
+        DepartmentDto dto = new DepartmentDto();
+        dto.setId(d.getId());
+        dto.setName(d.getName());
+        dto.setDescription(d.getDescription());
+        return dto;
+    }
+}

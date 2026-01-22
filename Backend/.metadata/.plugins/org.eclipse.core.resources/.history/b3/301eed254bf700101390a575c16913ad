@@ -1,0 +1,8 @@
+package com.civicissues.dto;
+
+import java.util.Locale.Category;
+
+public class DepartmentDTO {
+   private String deptname;
+   private Category catgory;
+}
