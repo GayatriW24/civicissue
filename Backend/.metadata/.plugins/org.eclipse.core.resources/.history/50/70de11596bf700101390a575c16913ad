@@ -1,5 +1,0 @@
-package com.civicissues.config;
-
-public class RestTemplateConfig {
-
-}

@@ -1,7 +1,0 @@
-package com.civicissues.exceptions;
-
-public class ResourceNotFoundException {
-     ResourceNotFoundException(String msg){
-    	 super(msg);
-     }
-}

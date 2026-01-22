@@ -1,6 +1,0 @@
-package com.civicissues.service;
-
-public interface CategoryService {
-	CategoryDto createCategory(CategoryDto dto);
-    List<CategoryDto> getCategoriesByDepartment(Long departmentId);
-}

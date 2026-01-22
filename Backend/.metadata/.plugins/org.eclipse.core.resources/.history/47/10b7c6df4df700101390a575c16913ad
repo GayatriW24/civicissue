@@ -1,5 +1,0 @@
-package com.civicissues.service;
-
-public interface DepartmentService {
-
-}
