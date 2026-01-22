@@ -1,0 +1,5 @@
+package com.civicissues.service.impl;
+
+public class CategoryServiceImpl {
+
+}

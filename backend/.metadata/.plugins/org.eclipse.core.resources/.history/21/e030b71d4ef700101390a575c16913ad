@@ -1,0 +1,10 @@
+package com.civicissues.service;
+
+import com.civicissues.dto.DepartmentDto;
+import java.util.List;
+
+public interface DepartmentService {
+    DepartmentDto createDepartment(DepartmentDto dto);
+    List<DepartmentDto> getAllDepartments();
+    DepartmentDto getDepartmentById(Long id);
+}

@@ -1,0 +1,93 @@
+package com.civicissues.service.impl;
+
+import com.civicissues.dto.CategoryDto;
+import com.civicissues.entity.Category;
+import com.civicissues.entity.Department;
+import com.civicissues.repository.CategoryRepository;
+import com.civicissues.repository.DepartmentRepository;
+import com.civicissues.service.CategoryService;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+public class CategoryServiceImpl implements CategoryService {
+
+    private final CategoryRepository categoryRepository;
+    private final DepartmentRepository departmentRepository;
+
+    public CategoryServiceImpl(CategoryRepository categoryRepository, DepartmentRepository departmentRepository) {
+        this.categoryRepository = categoryRepository;
+        this.departmentRepository = departmentRepository;
+    }
+
+    @Override
+    public CategoryDto createCategory(CategoryDto dto) {
+        Department department = departmentRepository.findById(dto.getDepartmentId()).orElseThrow();
+
+        Category category = new Category();
+        category.setName(dto.getName());
+        category.setDepartment(department);
+
+        Category saved = categoryRepository.save(category);
+        dto.setId(saved.getId());
+        return dto;
+    }
+
+    @Override
+    public CategoryDto updateCategory(Long id, CategoryDto dto) {
+        Category category = categoryRepository.findById(id).orElseThrow();
+        Department department = departmentRepository.findById(dto.getDepartmentId()).orElseThrow();
+
+        category.setName(dto.getName());
+        category.setDepartment(department);
+
+        Category updated = categoryRepository.save(category);
+        dto.setId(updated.getId());
+        return dto;
+    }
+
+    @Override
+    public CategoryDto getCategoryById(Long id) {
+        Category c = categoryRepository.findById(id).orElseThrow();
+        CategoryDto dto = new CategoryDto();
+        dto.setId(c.getId());
+        dto.setName(c.getName());
+        dto.setDepartmentId(c.getDepartment().getId());
+        return dto;
+    }
+
+    @Override
+    public List<CategoryDto> getAllCategories() {
+        return categoryRepository.findAll()
+                .stream()
+                .map(c -> {
+                    CategoryDto dto = new CategoryDto();
+                    dto.setId(c.getId());
+                    dto.setName(c.getName());
+                    dto.setDepartmentId(c.getDepartment().getId());
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<CategoryDto> getCategoriesByDepartment(Long departmentId) {
+        return categoryRepository.findByDepartmentId(departmentId)
+                .stream()
+                .map(c -> {
+                    CategoryDto dto = new CategoryDto();
+                    dto.setId(c.getId());
+                    dto.setName(c.getName());
+                    dto.setDepartmentId(c.getDepartment().getId());
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void deleteCategory(Long id) {
+        categoryRepository.deleteById(id);
+    }
+}
