@@ -1,0 +1,17 @@
+package com.async.events;
+
+
+import lombok.Getter;
+import lombok.Setter;
+import java.time.LocalDateTime;
+
+@Getter
+@Setter
+public class NotificationEvent {
+    private Long id;
+    private String type;
+    private String recipient;
+    private String message;
+    private boolean sent;
+    private LocalDateTime createdAt;
+}

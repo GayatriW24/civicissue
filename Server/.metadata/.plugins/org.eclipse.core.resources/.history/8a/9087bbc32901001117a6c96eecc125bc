@@ -1,0 +1,9 @@
+package com.civicissues.exception;
+
+
+
+public class InvaliAction extends RuntimeException {
+    public InvaliAction(String message) {
+        super(message);
+    }
+}

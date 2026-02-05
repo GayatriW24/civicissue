@@ -1,0 +1,129 @@
+////package com.civicissues.security;
+////
+////import org.springframework.beans.factory.annotation.Value;
+////import org.springframework.stereotype.Component;
+////
+////import io.jsonwebtoken.Jwts;
+////@Component
+////public class JwtUtil {
+////
+////	@Value("${jwt.secret}")
+////    private String secret;
+////    
+////	public String extractAadhaar(String token) {
+////        return Jwts.parserBuilder()
+////                .setSigningKey(secret.getBytes())
+////                .build()
+////                .parseClaimsJws(token)
+////                .getBody()
+////                .getSubject();
+////    }
+////}
+//package com.civicissues.security;
+//
+//import io.jsonwebtoken.Claims;
+//import io.jsonwebtoken.Jwts;
+//import org.springframework.beans.factory.annotation.Value;
+//import org.springframework.stereotype.Component;
+//
+//@Component
+//public class JwtUtil {
+//
+//    @Value("${jwt.secret}")
+//    private String secret;
+//
+//    private Claims getClaims(String token) {
+//        return Jwts.parserBuilder()
+//                .setSigningKey(secret.getBytes())
+//                .build()
+//                .parseClaimsJws(token)
+//                .getBody();
+//    }
+//
+//    public String extractAadhaar(String token) {
+//        return getClaims(token).getSubject();
+//    }
+//
+////    public String extractRole(String token) {
+////        return getClaims(token).get("role", String.class);
+////    }
+////
+////    public Long extractDepartmentId(String token) {
+////        Integer deptId = getClaims(token).get("departmentId", Integer.class);
+////        return deptId != null ? deptId.longValue() : null;
+////    }
+//    public String extractRole(String token) {
+//        return Jwts.parserBuilder()
+//                .setSigningKey(secret.getBytes())
+//                .build()
+//                .parseClaimsJws(token)
+//                .getBody()
+//                .get("role", String.class);
+//    }
+//
+//    public Long extractDepartmentId(String token) {
+//        Integer deptId = Jwts.parserBuilder()
+//                .setSigningKey(secret.getBytes())
+//                .build()
+//                .parseClaimsJws(token)
+//                .getBody()
+//                .get("departmentId", Integer.class); // JWT stores numbers as Integer
+//        return deptId != null ? deptId.longValue() : null;
+//    }
+//
+//}
+//package com.civicissues.security;
+//
+//import org.springframework.beans.factory.annotation.Value;
+//import org.springframework.stereotype.Component;
+//
+//import io.jsonwebtoken.Jwts;
+//@Component
+//public class JwtUtil {
+//
+//	@Value("${jwt.secret}")
+//    private String secret;
+//    
+//	public String extractAadhaar(String token) {
+//        return Jwts.parserBuilder()
+//                .setSigningKey(secret.getBytes())
+//                .build()
+//                .parseClaimsJws(token)
+//                .getBody()
+//                .getSubject();
+//    }
+//}
+package com.civicissues.security;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+@Component
+public class JwtUtil {
+
+    @Value("${jwt.secret}")
+    private String secret;
+
+    private Claims getClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(secret.getBytes())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
+
+    public String extractAadhaar(String token) {
+        return getClaims(token).getSubject();
+    }
+
+    public String extractRole(String token) {
+        return getClaims(token).get("role", String.class);
+    }
+
+    public Long extractDepartmentId(String token) {
+        Integer deptId = getClaims(token).get("departmentId", Integer.class);
+        return deptId != null ? deptId.longValue() : null;
+    }
+}

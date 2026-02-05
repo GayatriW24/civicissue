@@ -1,0 +1,37 @@
+package com.civicissues.service;
+
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.stereotype.Service;
+
+import com.async.events.NotificationEvent;
+
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class EmailService {
+
+    private final JavaMailSender mailSender;
+
+    public void sendComplaintCreated(NotificationEvent e) {
+        SimpleMailMessage msg = new SimpleMailMessage();
+        msg.setTo("btsarmy979524@gmail.com");
+       // msg.setCc("btsarmy979524@gmail.com");
+        msg.setSubject("Complaint Recieved");
+        msg.setText("Your Complaint is Recieved on " + e.getCreatedAt());
+        mailSender.send(msg);
+    }
+    
+    
+    public void sendComplaintResolved(NotificationEvent e) {
+        SimpleMailMessage msg = new SimpleMailMessage();
+        msg.setTo("btsarmy979524@gmail.com");
+       // msg.setCc("btsarmy979524");
+        msg.setSubject("Complaint Resolved");
+        msg.setText("Your Complaint is Resolved on " + e.getCreatedAt());
+        mailSender.send(msg);
+    }
+
+    
+}

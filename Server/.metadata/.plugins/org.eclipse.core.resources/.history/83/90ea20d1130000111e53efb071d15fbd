@@ -1,0 +1,54 @@
+package com.civicissues.controller;
+
+import com.civicissues.dto.request.ChangePasswordRequest;
+import com.civicissues.dto.response.ApiResponse;
+import com.civicissues.dto.response.UserResponse;
+import com.civicissues.service.UserService;
+
+import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/users")
+public class UserController {
+
+    private final UserService userService;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<UserResponse>> me() {
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, "User fetched successfully",
+                        userService.getCurrentUser()));
+    }
+
+    @PutMapping("/change-password")
+    public ResponseEntity<ApiResponse<Void>> changePassword(
+            @Valid @RequestBody ChangePasswordRequest request) {
+
+        userService.changePassword(request);
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, "Password updated successfully", null));
+    }
+
+    @GetMapping("/validate")
+    public ResponseEntity<ApiResponse<UserResponse>> validate() {
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, "Token is valid",
+                        userService.validateToken()));
+    }
+
+    // 🔴 INTERNAL — keep raw (service-to-service)
+    @GetMapping("/internal/{id}/email")
+    public String getEmailByUserId(@PathVariable Long id) {
+        return userService.getEmailByUserId(id);
+    }
+
+    @GetMapping("/internal/aadhaar/{aadhaar}/email")
+    public String getEmailByAadhaar(@PathVariable String aadhaar) {
+        return userService.getEmailByAadhaar(aadhaar);
+    }
+}

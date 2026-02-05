@@ -1,0 +1,68 @@
+package com.civicissues.service;
+
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.stereotype.Service;
+
+import com.async.events.NotificationEvent;
+import com.civicissues.client.UserClient;
+
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class EmailService {
+
+    private final JavaMailSender mailSender;
+    private final UserClient userClient;
+
+    public void sendComplaintCreated(NotificationEvent e) {
+
+        String email = userClient.getEmailByUserId(e.getCitizenId());
+
+        SimpleMailMessage msg = new SimpleMailMessage();
+        msg.setTo(email);
+        msg.setSubject("complaint registered successfully");
+        msg.setText("""
+                hello,
+
+                your complaint (id: %d) has been registered successfully.
+                our team will review it shortly.
+
+                registered on: %s
+
+                civic issues system
+                """.formatted(
+                        e.getComplaintId(),
+                        e.getCreatedAt()
+                ));
+
+        mailSender.send(msg);
+    }
+
+    public void sendComplaintResolved(NotificationEvent e) {
+
+        String email = userClient.getEmailByUserId(e.getCitizenId());
+
+        SimpleMailMessage msg = new SimpleMailMessage();
+        msg.setTo(email);
+        msg.setSubject("complaint resolved");
+        msg.setText("""
+                hello,
+
+                good news 
+                your complaint (id: %d) has been resolved.
+
+                resolved on: %s
+
+                thank you for helping us improve civic services.
+
+                civic issues system
+                """.formatted(
+                        e.getComplaintId(),
+                        e.getCreatedAt()
+                ));
+
+        mailSender.send(msg);
+    }
+}

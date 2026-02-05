@@ -1,0 +1,98 @@
+package com.civicissues.exception;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    /* ================= 400 - VALIDATION ================= */
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, Object>> handleValidation(
+            MethodArgumentNotValidException ex
+    ) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getFieldErrors()
+                .forEach(e -> errors.put(e.getField(), e.getDefaultMessage()));
+
+        return buildResponse(
+                HttpStatus.BAD_REQUEST,
+                "Validation failed",
+                errors
+        );
+    }
+
+    /* ================= 401 ================= */
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<Map<String, Object>> handleUnauthorized(
+            UnauthorizedException ex
+    ) {
+        return buildResponse(
+                HttpStatus.UNAUTHORIZED,
+                ex.getMessage(),
+                null
+        );
+    }
+
+    /* ================= 403 ================= */
+
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<Map<String, Object>> handleForbidden(
+            ForbiddenException ex
+    ) {
+        return buildResponse(
+                HttpStatus.FORBIDDEN,
+                ex.getMessage(),
+                null
+        );
+    }
+
+    /* ================= 404 ================= */
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleNotFound(
+            ResourceNotFoundException ex
+    ) {
+        return buildResponse(
+                HttpStatus.NOT_FOUND,
+                ex.getMessage(),
+                null
+        );
+    }
+
+    /* ================= 500 - FALLBACK ================= */
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, Object>> handleAll(Exception ex) {
+        return buildResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "Something went wrong",
+                null
+        );
+    }
+
+    /* ================= RESPONSE BUILDER ================= */
+
+    private ResponseEntity<Map<String, Object>> buildResponse(
+            HttpStatus status,
+            String message,
+            Object data
+    ) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", status.value());
+        body.put("message", message);
+        body.put("data", data);
+
+        return ResponseEntity.status(status).body(body);
+    }
+}

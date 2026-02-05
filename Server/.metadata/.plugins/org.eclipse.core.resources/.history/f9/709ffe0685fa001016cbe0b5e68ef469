@@ -1,0 +1,31 @@
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+public class RegisterCitizenRequest {
+
+    @NotBlank
+    @Size(min = 2, max = 50)
+    private String name;
+
+    @NotBlank
+    @Pattern(regexp = "^[0-9]{10}$")
+    private String phone;
+
+    @NotBlank
+    @Pattern(regexp = "^[0-9]{12}$")
+    private String aadhaar;
+
+    @NotBlank
+    @Email
+    private String email;
+
+    @NotBlank
+    @Size(min = 8)
+    private String password;
+}

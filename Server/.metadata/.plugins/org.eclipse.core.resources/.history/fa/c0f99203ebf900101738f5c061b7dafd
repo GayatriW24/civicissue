@@ -1,0 +1,27 @@
+package com.civicissues.async;
+
+@Configuration
+public class RabbitConfig {
+
+    @Bean
+    public TopicExchange appointmentExchange() {
+        return new TopicExchange("appointment.exchange");
+    }
+
+    @Bean
+    public Queue notificationQueue() {
+        return new Queue("notification.queue");
+    }
+
+    @Bean
+    public Binding binding() {
+        return BindingBuilder
+                .bind(notificationQueue())
+                .to(appointmentExchange())
+                .with("appointment.*");
+    }
+    @Bean
+    MessageConverter jsonMessageConverter() {
+       return new Jackson2JsonMessageConverter();
+   }
+}

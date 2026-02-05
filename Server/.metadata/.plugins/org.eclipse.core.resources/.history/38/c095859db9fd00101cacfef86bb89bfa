@@ -1,0 +1,55 @@
+package com.civicissues.security;
+
+import java.util.Date;
+import java.util.HashMap;
+
+import org.hibernate.mapping.Map;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+import com.civicissues.entity.User;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
+
+
+@Component
+public class JwtUtil {
+
+    @Value("${jwt.secret}")
+    private String secret;
+
+    @Value("${jwt.expiration}")
+    private long expiration;
+
+    public String generateToken(User user) {
+    	Map<String, Object> claims = new HashMap<>();
+        claims.put("role", user.getRole().name());
+
+        if (user.getDepartmentId() != null) {
+            claims.put("departmentId", user.getDepartmentId());
+        }
+        return Jwts.builder()
+                .setSubject(user.getAadhaar())
+                .claim("role", user.getRole().name())
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(Keys.hmacShaKeyFor(secret.getBytes()), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public String extractUsername(String token) {
+        return getClaims(token).getSubject();
+    }
+
+    public Claims getClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(secret.getBytes())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
+}
+

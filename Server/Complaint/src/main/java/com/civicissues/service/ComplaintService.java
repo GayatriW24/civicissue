@@ -1,0 +1,33 @@
+package com.civicissues.service;
+
+import java.util.List;
+import java.util.Map;
+
+import com.civicissues.dto.ComplaintCreateDto;
+import com.civicissues.dto.ComplaintResponseDto;
+import com.civicissues.entity.ComplaintStatus;
+
+public interface ComplaintService {
+
+   ComplaintResponseDto createComplaint(String citizenAadhaar,ComplaintCreateDto dto);
+	//ComplaintResponseDto createComplaint(ComplaintCreateDto dto);
+    ComplaintResponseDto getComplaintById(Long id);
+
+    List<ComplaintResponseDto> getAllComplaints();
+
+    boolean existsById(Long id);
+
+	ComplaintResponseDto updateStatus(Long complaintId, ComplaintStatus status,
+            String role, Long departmentId);
+	
+	List<ComplaintResponseDto> getByDepartment(Long departmentId);
+	Map<ComplaintStatus, Long> countByStatus();
+	Map<Long, Long> countByDepartment();
+    
+	List<Object[]> countByCity();
+	List<Object[]> countByCategory();
+
+	//List<ComplaintResponseDto> getByUser(Long userId);
+	List<ComplaintResponseDto> getByCitizen(String citizenAadhaar);
+
+}

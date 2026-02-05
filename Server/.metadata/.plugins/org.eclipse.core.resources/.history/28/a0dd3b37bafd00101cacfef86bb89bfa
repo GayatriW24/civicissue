@@ -1,0 +1,78 @@
+package com.civicissues.service.impl;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import com.civicissues.dto.AuthResponse;
+import com.civicissues.dto.LoginRequest;
+import com.civicissues.dto.RegisterCitizenRequest;
+import com.civicissues.entity.Role;
+import com.civicissues.entity.User;
+import com.civicissues.exception.InvalidCredentialsException;
+import com.civicissues.exception.UserAlreadyExistsException;
+import com.civicissues.repository.UserRepository;
+import com.civicissues.security.JwtUtil;
+import com.civicissues.service.AuthService;
+
+@Service
+public class AuthServiceImpl implements AuthService {
+
+    private final UserRepository userRepository;
+    private final PasswordEncoder encoder;
+    private final JwtUtil jwtUtil;
+
+    public AuthServiceImpl(UserRepository userRepository, PasswordEncoder encoder, JwtUtil jwtUtil) {
+        this.userRepository = userRepository;
+        this.encoder = encoder;
+        this.jwtUtil = jwtUtil;
+    }
+
+    @Override
+    public void registerCitizen(RegisterCitizenRequest request) {
+        if (userRepository.existsByAadhaar(request.getAadhaar())) {
+            throw new UserAlreadyExistsException("aadhaar already registered");
+        }
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new RuntimeException("email already registered");
+        }
+
+        
+
+
+        User user = new User();
+        user.setName(request.getName());
+        user.setPhone(request.getPhone());
+        user.setEmail(request.getEmail());
+
+        user.setAadhaar(request.getAadhaar());
+        user.setPassword(encoder.encode(request.getPassword()));
+        user.setRole(Role.CITIZEN);
+        user.setActive(true);
+
+        userRepository.save(user);
+    }
+
+
+    @Override
+    public AuthResponse login(LoginRequest request) {
+        User user = userRepository.findByAadhaar(request.getAadhaar())
+                .orElseThrow(() -> new InvalidCredentialsException("invalid aadhaar or password"));
+
+        if (!user.isActive()) {
+            throw new InvalidCredentialsException("account is deactivated");
+        }
+
+        if (!encoder.matches(request.getPassword(), user.getPassword())) {
+            throw new InvalidCredentialsException("invalid aadhaar or password");
+        }
+
+        String token = jwtUtil.generateToken(user);
+        Long departmentId = null;
+        if (user.getRole() == Role.ADMIN && user.getDepartmentId() != null) {
+            departmentId = user.getDepartmentId();
+        }
+
+        return new AuthResponse(token, user.getRole().name(), departmentId);
+
+    
+}

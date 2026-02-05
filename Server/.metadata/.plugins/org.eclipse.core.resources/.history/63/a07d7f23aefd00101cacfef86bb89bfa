@@ -1,0 +1,28 @@
+package com.civicissues.security;
+
+import java.nio.charset.StandardCharsets;
+
+import javax.crypto.SecretKey;
+
+import org.springframework.stereotype.Component;
+
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+@Component
+public class JwtUtil {
+
+	@Value("${jwt.secret}")
+    private String secret;
+    private static final SecretKey KEY =
+            Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8));
+
+    public static String extractUserId(String token) {
+        return Jwts.parser()
+                .verifyWith(KEY)   
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .getSubject();
+        
+    }
+}

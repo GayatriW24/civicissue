@@ -1,0 +1,65 @@
+package com.civicissues.service.impl;
+
+import com.civicissues.dto.request.ChangePasswordRequest;
+import com.civicissues.dto.response.UserResponse;
+import com.civicissues.entity.User;
+import com.civicissues.exception.InvalidCredentialsException;
+import com.civicissues.repository.UserRepository;
+import com.civicissues.service.UserService;
+
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+@Service
+public class UserServiceImpl implements UserService {
+
+    private final UserRepository userRepository;
+    private final PasswordEncoder encoder;
+
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder encoder) {
+        this.userRepository = userRepository;
+        this.encoder = encoder;
+    }
+
+    private User getLoggedInUser() {
+        String aadhaar = SecurityContextHolder.getContext().getAuthentication().getName();
+        return userRepository.findByAadhaar(aadhaar).orElseThrow();
+    }
+
+    @Override
+    public UserResponse getCurrentUser() {
+        User user = getLoggedInUser();
+        return map(user);
+    }
+
+    @Override
+    public void changePassword(ChangePasswordRequest request) {
+        User user = getLoggedInUser();
+
+        if (!encoder.matches(request.getOldPassword(), user.getPassword())) {
+            throw new InvalidCredentialsException("old password incorrect");
+        }
+
+        user.setPassword(encoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+    }
+
+    @Override
+    public UserResponse validateToken() {
+        User user = getLoggedInUser();
+        return map(user);
+    }
+
+    private UserResponse map(User user) {
+        return new UserResponse(
+                user.getId(),
+                user.getName(),
+                user.getAadhaar(),
+                user.getPhone(),
+                user.getRole(),
+                user.isActive()
+        );
+    }
+    v
+}

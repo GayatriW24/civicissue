@@ -1,0 +1,96 @@
+package com.civicissues.controller;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.civicissues.dto.ComplaintCreateDto;
+import com.civicissues.dto.ComplaintResponseDto;
+import com.civicissues.entity.ComplaintStatus;
+import com.civicissues.service.ComplaintService;
+
+import jakarta.validation.Valid;
+
+@RestController
+@RequestMapping("/api/complaints")
+public class ComplaintController {
+
+    private final ComplaintService complaintService;
+
+    public ComplaintController(ComplaintService complaintService) {
+        this.complaintService = complaintService;
+    }
+
+    @PostMapping
+    
+    public ComplaintResponseDto create(@Valid @RequestHeader("X-USER-ID") Long citizenId,@RequestBody ComplaintCreateDto dto) {
+        return complaintService.createComplaint(citizenId,dto);
+    }
+    @GetMapping("/{id}")
+    public ComplaintResponseDto getById(@PathVariable Long id) {
+        return complaintService.getComplaintById(id);
+    }
+    
+    @GetMapping
+    public List<ComplaintResponseDto> getAll() {
+        return complaintService.getAllComplaints();
+    }
+    
+    @GetMapping("/{id}/exists")
+    public boolean exists(@PathVariable Long id) {
+        return complaintService.existsById(id);
+    }
+    @GetMapping("/department/{departmentId}")
+    public List<ComplaintResponseDto> byDepartment(@PathVariable Long departmentId) {
+        return complaintService.getByDepartment(departmentId);
+    }
+
+    @PutMapping("/{id}/status/{status}")
+    public ComplaintResponseDto updateStatus(
+        @PathVariable Long id,
+        @PathVariable ComplaintStatus status
+    ) {
+        return complaintService.updateStatus(id, status);
+    }
+
+    
+    
+    @GetMapping("/department")
+    public List<ComplaintResponseDto> getByDepartment(
+            @RequestParam Long departmentId
+    ) {
+        return complaintService.getByDepartment(departmentId);
+    }
+    
+    
+    @GetMapping("/analytics/status")
+    public Map<ComplaintStatus, Long> statusAnalytics() {
+        return complaintService.countByStatus();
+    }
+    
+    @GetMapping("/analytics/city")
+    public List<Object[]> complaintsByCity() {
+        return complaintService.countByCity();
+    }
+
+    @GetMapping("/analytics/category")
+    public List<Object[]> complaintsByCategory() {
+        return complaintService.countByCategory();
+    }
+
+    
+    
+
+
+
+    
+}

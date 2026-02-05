@@ -1,0 +1,11 @@
+package com.civicissues.service;
+
+@Service
+public class StorageService {
+
+    public String upload(MultipartFile file) {
+        // TEMP: local storage / mock
+        return "http://localhost/files/" + file.getOriginalFilename();
+    }
+}
+

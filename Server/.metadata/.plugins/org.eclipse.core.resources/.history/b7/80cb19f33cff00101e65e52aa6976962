@@ -1,0 +1,14 @@
+# Use Java 21 image
+FROM eclipse-temurin:21-jdk
+
+# Set working directory inside container
+WORKDIR /app
+
+# Copy JAR into container
+COPY target/*.jar app.jar
+
+# Expose service port (change per microservice)
+EXPOSE 8089
+
+# Run JAR
+ENTRYPOINT ["java", "-jar", "app.jar"]

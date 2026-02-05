@@ -1,0 +1,40 @@
+package com.civicissues.async;
+
+import org.springframework.amqp.core.Queue;
+
+
+import javax.naming.Binding;
+
+import org.springframework.amqp.core.BindingBuilder;
+import org.springframework.amqp.core.TopicExchange;
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import ch.qos.logback.classic.pattern.MessageConverter;
+
+@Configuration
+public class RabbitConfig {
+
+    @Bean
+    public TopicExchange appointmentExchange() {
+        return new TopicExchange("appointment.exchange");
+    }
+
+    @Bean
+    public Queue notificationQueue() {
+        return new Queue("notification.queue");
+    }
+
+    @Bean
+    public Binding binding() {
+        return BindingBuilder
+                .bind(notificationQueue())
+                .to(appointmentExchange())
+                .with("appointment.*");
+    }
+    @Bean
+    MessageConverter jsonMessageConverter() {
+       return new Jackson2JsonMessageConverter();
+   }
+}

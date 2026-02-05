@@ -1,0 +1,247 @@
+package com.civicissues.service.impl;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.modelmapper.ModelMapper;
+import org.springframework.stereotype.Service;
+
+import com.async.events.NotificationEvent;
+import com.civicissues.async.ComplaintEventPublisher;
+import com.civicissues.client.UsersClient;
+import com.civicissues.dto.ComplaintCreateDto;
+import com.civicissues.dto.ComplaintResponseDto;
+import com.civicissues.entity.Complaint;
+import com.civicissues.entity.ComplaintStatus;
+import com.civicissues.exception.ResourceNotFoundException;
+import com.civicissues.repository.ComplaintRepository;
+import com.civicissues.service.ComplaintService;
+
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class ComplaintServiceImpl implements ComplaintService {
+
+    private final ComplaintRepository complaintRepository;
+    private final ComplaintEventPublisher publisher;
+    private final ModelMapper modelMapper;
+    private final UsersClient userClient;
+
+    @Override
+    public ComplaintResponseDto createComplaint(
+    		String citizenAadhaar,
+            ComplaintCreateDto dto
+    ) {
+
+        boolean alreadyExists =
+            complaintRepository.existsByCitizenIdAndCategoryIdAndAreaAndStatus(
+            		citizenAadhaar,
+                dto.getCategoryId(),
+                dto.getArea(),
+                ComplaintStatus.OPEN
+            );
+
+        if (alreadyExists) {
+            throw new IllegalStateException(
+                "complaint already exists for this issue in your area"
+            );
+        }
+
+        Complaint complaint = new Complaint();
+      //  complaint.setCitizenId(citizenAadhaar);
+        complaint.setCitizenAadhaar(citizenAadhaar);
+
+        complaint.setDepartmentId(dto.getDepartmentId());
+        complaint.setCategoryId(dto.getCategoryId());
+        complaint.setDescription(dto.getDescription());
+        complaint.setArea(dto.getArea());
+        complaint.setCity(dto.getCity());
+        complaint.setStatus(ComplaintStatus.OPEN);
+        complaint.setCreatedAt(LocalDateTime.now());
+
+        Complaint saved = complaintRepository.save(complaint);
+
+        NotificationEvent event = new NotificationEvent();
+        
+        event.setComplaintId(saved.getId());
+        event.setType("COMPLAINT_CREATED");
+        complaint.setCitizenAadhaar(citizenAadhaar);
+
+       // event.setUserId(citizenAadhaar);
+        event.setMessage("your complaint has been registered");
+        event.setCreatedAt(LocalDateTime.now());
+
+        publisher.publish(event);
+
+        ComplaintResponseDto res = new ComplaintResponseDto();
+        res.setId(saved.getId());
+        res.setCitizenId(saved.getCitizenId());
+        res.setDepartmentId(saved.getDepartmentId());
+        res.setCategoryId(saved.getCategoryId());
+        res.setArea(saved.getArea());
+        res.setCity(saved.getCity());
+        res.setDescription(saved.getDescription());
+        res.setStatus(saved.getStatus());
+        res.setCreatedAt(saved.getCreatedAt());
+
+        return res;
+    }
+
+   
+
+	@Override
+    public ComplaintResponseDto updateStatus(Long complaintId, ComplaintStatus status) {
+
+        Complaint complaint = complaintRepository.findById(complaintId)
+                .orElseThrow(() -> new ResourceNotFoundException("complaint not found"));
+
+        complaint.setStatus(status);
+        Complaint updated = complaintRepository.save(complaint);
+
+        NotificationEvent event = new NotificationEvent();
+        event.setComplaintId(updated.getId());
+        event.setType("COMPLAINT_RESOLVED");
+        event.setUserId(updated.getCitizenId());
+        event.setMessage("your complaint has been resolved");
+        event.setCreatedAt(LocalDateTime.now());
+
+        publisher.publish(event);
+
+
+        ComplaintResponseDto dto = new ComplaintResponseDto();
+        dto.setId(updated.getId());
+        dto.setCitizenId(updated.getCitizenId());
+        dto.setDepartmentId(updated.getDepartmentId());
+        dto.setCategoryId(updated.getCategoryId());
+        dto.setArea(updated.getArea());
+        dto.setCity(updated.getCity());
+        dto.setDescription(updated.getDescription());
+        dto.setStatus(updated.getStatus());
+        dto.setCreatedAt(updated.getCreatedAt());
+
+        return dto;
+    }
+
+    @Override
+    public ComplaintResponseDto getComplaintById(Long id) {
+
+        Complaint c = complaintRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("complaint not found"));
+
+        ComplaintResponseDto res = new ComplaintResponseDto();
+        res.setId(c.getId());
+        res.setCitizenId(c.getCitizenId());
+        res.setDepartmentId(c.getDepartmentId());
+        res.setCategoryId(c.getCategoryId());
+        res.setArea(c.getArea());
+        res.setCity(c.getCity());
+        res.setDescription(c.getDescription());
+        res.setStatus(c.getStatus());
+        res.setCreatedAt(c.getCreatedAt());
+
+        return res;
+    }
+
+    @Override
+    public List<ComplaintResponseDto> getAllComplaints() {
+
+        return complaintRepository.findAll().stream().map(c -> {
+            ComplaintResponseDto dto = new ComplaintResponseDto();
+            dto.setId(c.getId());
+            dto.setCitizenId(c.getCitizenId());
+            dto.setDepartmentId(c.getDepartmentId());
+            dto.setCategoryId(c.getCategoryId());
+            dto.setArea(c.getArea());
+            dto.setCity(c.getCity());
+            dto.setDescription(c.getDescription());
+            dto.setStatus(c.getStatus());
+            dto.setCreatedAt(c.getCreatedAt());
+            return dto;
+        }).collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean existsById(Long id) {
+        return complaintRepository.existsById(id);
+    }
+
+    @Override
+    public List<ComplaintResponseDto> getByDepartment(Long departmentId) {
+
+        return complaintRepository.findByDepartmentId(departmentId)
+                .stream()
+                .map(c -> {
+                    ComplaintResponseDto dto = new ComplaintResponseDto();
+                    dto.setId(c.getId());
+                    dto.setCitizenId(c.getCitizenId());
+                    dto.setDepartmentId(c.getDepartmentId());
+                    dto.setCategoryId(c.getCategoryId());
+                    dto.setArea(c.getArea());
+                    dto.setCity(c.getCity());
+                    dto.setDescription(c.getDescription());
+                    dto.setStatus(c.getStatus());
+                    dto.setCreatedAt(c.getCreatedAt());
+                    return dto;
+                }).collect(Collectors.toList());
+    }
+    
+    
+
+	@Override
+	public Map<ComplaintStatus, Long> countByStatus() {
+
+	    return complaintRepository.countByStatus()
+	            .stream()
+	            .collect(Collectors.toMap(
+	                    r -> (ComplaintStatus) r[0],
+	                    r -> (Long) r[1]
+	            ));
+	}
+
+
+	@Override
+	public Map<Long, Long> countByDepartment() {
+
+	    return complaintRepository.countByDepartment()
+	            .stream()
+	            .collect(Collectors.toMap(
+	                    r -> (Long) r[0],
+	                    r -> (Long) r[1]
+	            ));
+	}
+
+	@Override
+	public List<Object[]> countByCity() {
+	    return complaintRepository.countByCity();
+	}
+
+	@Override
+	public List<Object[]> countByCategory() {
+	    return complaintRepository.countByCategory();
+	}
+	@Override
+	public List<ComplaintResponseDto> getByUser(Long userId) {
+
+	    return complaintRepository.findByCitizenId(userId)
+	            .stream()
+	            .map(c -> {
+	                ComplaintResponseDto dto = new ComplaintResponseDto();
+	                dto.setId(c.getId());
+	                dto.setCitizenId(c.getCitizenId());
+	                dto.setDepartmentId(c.getDepartmentId());
+	                dto.setCategoryId(c.getCategoryId());
+	                dto.setCity(c.getCity());
+	                dto.setArea(c.getArea());
+	                dto.setDescription(c.getDescription());
+	                dto.setStatus(c.getStatus());
+	                dto.setCreatedAt(c.getCreatedAt());
+	                return dto;
+	            })
+	            .toList();
+	}
+
+
+}

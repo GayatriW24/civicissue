@@ -1,0 +1,5 @@
+package com.async.events;
+
+public enum NotificationType {
+
+}

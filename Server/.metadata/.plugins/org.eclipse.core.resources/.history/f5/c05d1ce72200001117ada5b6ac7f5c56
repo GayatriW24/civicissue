@@ -1,0 +1,180 @@
+package com.civicissues.config;
+
+
+import org.springframework.cloud.gateway.filter.GlobalFilter;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
+
+import com.civicissues.security.JwtUtil;
+
+@Configuration
+public class UserContextFilter {
+
+    private final JwtUtil jwtUtil;
+
+    public UserContextFilter(JwtUtil jwtUtil) {
+        this.jwtUtil = jwtUtil;
+    }
+
+//    @Bean
+//    public GlobalFilter userIdForwardingFilter() {
+//        return (exchange, chain) -> {
+//
+//            String authHeader = exchange.getRequest()
+//                    .getHeaders()
+//                    .getFirst("Authorization");
+//
+//            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+//                String token = authHeader.substring(7);
+//
+//                try {
+//                    String userId = jwtUtil.extractUserId(token);
+//
+//                    return chain.filter(
+//                        exchange.mutate()
+//                            .request(
+//                                exchange.getRequest().mutate()
+//                                    .header("X-USER-ID", String.valueOf(userId))
+//                                    .build()
+//                            )
+//                            .build()
+//                    );
+//                } catch (Exception e) {
+//                }
+//            }
+//
+//            return chain.filter(exchange);
+//        };
+//    }
+//    @Bean
+//    public GlobalFilter userIdForwardingFilter() {
+//        return (exchange, chain) -> {
+//
+//            String path = exchange.getRequest().getURI().getPath();
+//
+//            if (path.startsWith("/auth") || path.startsWith("/users") || path.startsWith("/admin")) {
+//                return chain.filter(exchange);
+//            }
+//
+//            String authHeader = exchange.getRequest()
+//                    .getHeaders()
+//                    .getFirst("Authorization");
+//
+//            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+//                exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+//                return exchange.getResponse().setComplete();
+//            }
+//
+//            String token = authHeader.substring(7);
+//
+//            try {
+//                String aadhaar = jwtUtil.extractAadhaar(token);
+//
+//                return chain.filter(
+//                    exchange.mutate()
+//                        .request(
+//                            exchange.getRequest().mutate()
+//                                .header("X-CITIZEN-AADHAAR", aadhaar)
+//                                .build()
+//                        )
+//                        .build()
+//                );
+//            } catch (Exception e) {
+//                exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+//                return exchange.getResponse().setComplete();
+//            }
+//        };
+//    }
+//    @Bean
+//    public GlobalFilter userIdForwardingFilter() {
+//        return (exchange, chain) -> {
+//
+//            String path = exchange.getRequest().getURI().getPath();
+//
+//            // Allow auth & user management without JWT
+//            if (path.startsWith("/auth") || path.startsWith("/users") || path.startsWith("/admin")) {
+//                return chain.filter(exchange);
+//            }
+//
+//            String authHeader = exchange.getRequest()
+//                    .getHeaders()
+//                    .getFirst("Authorization");
+//
+//            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+//                exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+//                return exchange.getResponse().setComplete();
+//            }
+//
+//            String token = authHeader.substring(7);
+//
+//            try {
+//                String aadhaar = jwtUtil.extractAadhaar(token);
+//                String role = jwtUtil.extractRole(token);
+//                Long departmentId = jwtUtil.extractDepartmentId(token);
+//
+//                return chain.filter(
+//                    exchange.mutate()
+//                        .request(r -> {
+//                            r.header("X-CITIZEN-AADHAAR", aadhaar);
+//                            if (role != null) {
+//                                r.header("role", role);
+//                            }
+//                            if (departmentId != null) {
+//                                r.header("departmentId", String.valueOf(departmentId));
+//                            }
+//                        })
+//                        .build()
+//                );
+//
+//            } catch (Exception e) {
+//                e.printStackTrace(); 
+//                exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+//                return exchange.getResponse().setComplete();
+//            }
+//        };
+//    }
+    @Bean
+    public GlobalFilter userContextForwardingFilter() {
+        return (exchange, chain) -> {
+            String path = exchange.getRequest().getURI().getPath();
+
+            // Skip auth endpoints
+            if (path.startsWith("/auth") || path.startsWith("/users") || path.startsWith("/admin")) {
+                return chain.filter(exchange);
+            }
+
+            String authHeader = exchange.getRequest().getHeaders().getFirst("Authorization");
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+                return exchange.getResponse().setComplete();
+            }
+
+            String token = authHeader.substring(7);
+
+            try {
+                String aadhaar = jwtUtil.extractAadhaar(token);
+                String role = jwtUtil.extractRole(token);
+                Long departmentId = jwtUtil.extractDepartmentId(token);
+
+                // Build the new request with all headers at once
+                var mutatedRequest = exchange.getRequest().mutate()
+                        .header("X-CITIZEN-AADHAAR", aadhaar)
+                        .header("role", role != null ? role : "")
+                        .header("departmentId", departmentId != null ? String.valueOf(departmentId) : "")
+                        .build();
+
+                // Pass the mutated exchange downstream
+                return chain.filter(exchange.mutate().request(mutatedRequest).build());
+
+            } catch (Exception e) {
+                e.printStackTrace(); // see what went wrong
+                exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+                return exchange.getResponse().setComplete();
+            }
+        };
+    }
+
+
+
+}

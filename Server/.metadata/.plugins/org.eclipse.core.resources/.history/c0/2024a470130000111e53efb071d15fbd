@@ -1,0 +1,37 @@
+package com.civicissues.initilizer;
+
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Component;
+
+import com.civicissues.entity.Role;
+import com.civicissues.entity.User;
+import com.civicissues.repository.UserRepository;
+
+@Component
+@Profile("local")
+public class DataInitializer implements CommandLineRunner {
+
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    public DataInitializer(UserRepository repo, PasswordEncoder encoder) {
+        this.userRepository = repo;
+        this.passwordEncoder = encoder;
+    }
+
+    @Override
+    public void run(String... args) {
+        if (!userRepository.existsByRole(Role.SUPER_ADMIN)) {
+            User user = new User();
+            user.setName("superadmin");
+            user.setAadhaar("999999999999");
+            user.setPassword(passwordEncoder.encode("admin@123"));
+            user.setRole(Role.SUPER_ADMIN);
+            
+            userRepository.save(user);
+        }
+    }
+}
+

@@ -1,0 +1,8 @@
+package com.civicissues.client;
+
+@FeignClient(name = "user-service", url = "http://localhost:8081")
+public interface UserClient {
+
+    @GetMapping("/users/internal/{id}/email")
+    String getEmailByUserId(@PathVariable Long id);
+}

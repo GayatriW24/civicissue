@@ -1,0 +1,50 @@
+package com.civicissues.controller;
+
+@RestController
+@RequestMapping("/admin")
+public class AdminController {
+
+    private final UserRepository userRepository;
+    private final PasswordEncoder encoder;
+
+    public AdminController(UserRepository userRepository, PasswordEncoder encoder) {
+        this.userRepository = userRepository;
+        this.encoder = encoder;
+    }
+
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PostMapping("/create-admin")
+    public ResponseEntity<ApiResponse<Void>> createAdmin(
+            @Valid @RequestBody CreateAdminRequest request) {
+
+        User user = new User();
+        user.setName(request.getName());
+        user.setAadhaar(request.getAadhaar());
+        user.setPhone(request.getPhone());
+        user.setEmail(request.getEmail());
+        user.setDepartmentId(request.getDepartmentId());
+
+        user.setPassword(encoder.encode("admin123"));
+        user.setRole(Role.ADMIN);
+        user.setActive(true);
+
+        userRepository.save(user);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ApiResponse<>(true, "Admin created successfully", null));
+    }
+
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PutMapping("/deactivate/{userId}")
+    public ResponseEntity<ApiResponse<Void>> deactivate(@PathVariable Long userId) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        user.setActive(false);
+        userRepository.save(user);
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, "User deactivated successfully", null));
+    }
+}

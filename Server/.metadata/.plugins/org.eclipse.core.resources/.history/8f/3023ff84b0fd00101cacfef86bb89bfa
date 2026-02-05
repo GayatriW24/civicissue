@@ -1,0 +1,150 @@
+package com.civicissues.service;
+
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.stereotype.Service;
+
+import com.async.events.NotificationEvent;
+import com.civicissues.client.UserClient;
+
+import feign.FeignException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class EmailService {
+
+    private final JavaMailSender mailSender;
+    private final UserClient userClient;
+
+    public void sendComplaintCreated(NotificationEvent e) {
+        try {
+        	String email = userClient.getEmailByAadhaar(e.getCitizenAadhaar());
+            if (email == null || email.isEmpty()) {
+                log.warn("email not found for userId {}", e.getUserId());
+                return;
+            }
+
+            SimpleMailMessage msg = new SimpleMailMessage();
+            msg.setTo(email);
+            msg.setSubject("complaint registered successfully");
+            msg.setText(String.format("""
+                hello,
+
+                your complaint (id: %d) has been registered successfully.
+                our team will review it shortly.
+
+                registered on: %s
+
+                civic issues system
+                """, e.getComplaintId(), e.getCreatedAt()));
+
+            mailSender.send(msg);
+        } catch (FeignException ex) {
+            log.error("user-service call failed for userId {}: {}", e.getUserId(), ex.getMessage());
+        } catch (Exception ex) {
+            log.error("failed to send email for complaint {}: {}", e.getComplaintId(), ex.getMessage());
+        }
+    }
+
+    public void sendComplaintResolved(NotificationEvent e) {
+        try {
+            String email = userClient.getEmailByUserId(e.getUserId());
+            if (email == null || email.isEmpty()) {
+                log.warn("email not found for userId {}", e.getUserId());
+                return;
+            }
+
+            SimpleMailMessage msg = new SimpleMailMessage();
+            msg.setTo(email);
+            msg.setSubject("complaint resolved");
+            msg.setText(String.format("""
+                hello,
+
+                good news
+                your complaint (id: %d) has been resolved.
+
+                resolved on: %s
+
+                thank you for helping us improve civic services.
+
+                civic issues system
+                """, e.getComplaintId(), e.getCreatedAt()));
+
+            mailSender.send(msg);
+        } catch (FeignException ex) {
+            log.error("user-service call failed for userId {}: {}", e.getUserId(), ex.getMessage());
+        } catch (Exception ex) {
+            log.error("failed to send email for complaint {}: {}", e.getComplaintId(), ex.getMessage());
+        }
+    }
+    
+    
+    
+    public void sendComplaintInProgress(NotificationEvent e) {
+        try {
+            String email = userClient.getEmailByUserId(e.getUserId());
+            if (email == null || email.isEmpty()) {
+                log.warn("email not found for userId {}", e.getUserId());
+                return;
+            }
+
+            SimpleMailMessage msg = new SimpleMailMessage();
+            msg.setTo(email);
+            msg.setSubject("complaint  progress");
+            msg.setText(String.format("""
+                hello,
+
+                
+                your complaint (id: %d) is in progress.
+
+                in progress on: %s
+
+                thank you for helping us improve civic services.
+
+                civic issues system
+                """, e.getComplaintId(), e.getCreatedAt()));
+
+            mailSender.send(msg);
+        } catch (FeignException ex) {
+            log.error("user-service call failed for userId {}: {}", e.getUserId(), ex.getMessage());
+        } catch (Exception ex) {
+            log.error("failed to send email for complaint {}: {}", e.getComplaintId(), ex.getMessage());
+        }
+    }
+    
+    
+    public void sendComplaintRejected(NotificationEvent e) {
+        try {
+            String email = userClient.getEmailByUserId(e.getUserId());
+            if (email == null || email.isEmpty()) {
+                log.warn("email not found for userId {}", e.getUserId());
+                return;
+            }
+
+            SimpleMailMessage msg = new SimpleMailMessage();
+            msg.setTo(email);
+            msg.setSubject("complaint rejected");
+            msg.setText(String.format("""
+                hello,
+
+                bad news
+                your complaint (id: %d) has been rejected.
+
+                rejected on: %s
+
+                thank you for helping us improve civic services.
+
+                civic issues system
+                """, e.getComplaintId(), e.getCreatedAt()));
+
+            mailSender.send(msg);
+        } catch (FeignException ex) {
+            log.error("user-service call failed for userId {}: {}", e.getUserId(), ex.getMessage());
+        } catch (Exception ex) {
+            log.error("failed to send email for complaint {}: {}", e.getComplaintId(), ex.getMessage());
+        }
+    }
+}
