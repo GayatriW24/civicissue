@@ -1,0 +1,21 @@
+package com.civicissues.dto;
+
+import java.util.Locale.Category;
+
+import lombok.NoArgsConstructor;
+
+
+@NoArgsConstructor
+
+public class DepartmentDTO {
+   private String deptname;
+   private Category catgory;
+
+   public DepartmentDTO(String deptname, Category catgory) {
+	super();
+	this.deptname = deptname;
+	this.catgory = catgory;
+}
+   
+   
+}

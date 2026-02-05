@@ -1,0 +1,28 @@
+package com.civicissues.controller;
+
+import com.civicissues.dto.CategoryDto;
+import com.civicissues.service.CategoryService;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/categories")
+public class CategoryController {
+
+    private final CategoryService categoryService;
+
+    public CategoryController(CategoryService categoryService) {
+        this.categoryService = categoryService;
+    }
+
+    @PostMapping
+    public CategoryDto create(@RequestBody CategoryDto dto) {
+        return categoryService.createCategory(dto);
+    }
+
+    @GetMapping("/department/{departmentId}")
+    public List<CategoryDto> getByDepartment(@PathVariable Long departmentId) {
+        return categoryService.getCategoriesByDepartment(departmentId);
+    }
+}

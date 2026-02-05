@@ -1,0 +1,48 @@
+package com.civicissues.controller;
+
+import com.civicissues.dto.CategoryDto;
+import com.civicissues.service.CategoryService;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/categories")
+public class CategoryController {
+
+    private final CategoryService categoryService;
+
+    public CategoryController(CategoryService categoryService) {
+        this.categoryService = categoryService;
+    }
+
+    @PostMapping
+    public CategoryDto create(@RequestBody CategoryDto dto) {
+        return categoryService.createCategory(dto);
+    }
+
+    @PutMapping("/{id}")
+    public CategoryDto update(@PathVariable Long id, @RequestBody CategoryDto dto) {
+        return categoryService.updateCategory(id, dto);
+    }
+
+    @GetMapping("/{id}")
+    public CategoryDto getById(@PathVariable Long id) {
+        return categoryService.getCategoryById(id);
+    }
+
+    @GetMapping
+    public List<CategoryDto> getAll() {
+        return categoryService.getAllCategories();
+    }
+
+    @GetMapping("/department/{departmentId}")
+    public List<CategoryDto> getByDepartment(@PathVariable Long departmentId) {
+        return categoryService.getCategoriesByDepartment(departmentId);
+    }
+
+    @DeleteMapping("/{id}")
+    public void delete(@PathVariable Long id) {
+        categoryService.deleteCategory(id);
+    }
+}
